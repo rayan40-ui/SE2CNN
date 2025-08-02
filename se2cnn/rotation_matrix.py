@@ -127,10 +127,10 @@ def ToLinearIndex(ij, NiNj):
               domain as [Ni,Nj]
 
         OUTPUT:
-            - ijFlat = ij[0] * NiNj[0] + ij[1]
+            - ijFlat = ij[0] * NiNj[1] + ij[1]
     """
 
-    return ij[0] * NiNj[0] + ij[1]
+    return ij[0] * NiNj[1] + ij[1]
 
 
 def RotationOperatorMatrix(NiNj, theta, diskMask=True):
@@ -154,14 +154,16 @@ def RotationOperatorMatrix(NiNj, theta, diskMask=True):
     # Image size
     Ni = NiNj[0]
     Nj = NiNj[1]
-    cij = m.floor(Ni / 2)  # center
+    ci = m.floor(Ni / 2)
+    cj = m.floor(Nj / 2)
+    radius = min(ci, cj)
 
     # Fill the rotation operator matrix
     rotationMatrix = np.zeros([Ni * Nj, Ni * Nj])
     for i in range(0, NiNj[0]):
-        for j in range(0, NiNj[0]):
+        for j in range(0, NiNj[1]):
             # Apply a circular mask (disk matrix) if desired
-            if not(diskMask) or ((i - cij) * (i - cij) + (j - cij) * (j - cij) <= (cij + 0.5) * (cij + 0.5)):
+            if (not diskMask) or ((i - ci) * (i - ci) + (j - cj) * (j - cj) <= (radius + 0.5) * (radius + 0.5)):
                 # The row index of the operator matrix
                 linij = ToLinearIndex([i, j], NiNj)
                 # The interpolation points
@@ -230,16 +232,18 @@ def RotationOperatorMatrixSparse(NiNj, theta, diskMask=True, linIndOffset=0):
     # Image size
     Ni = NiNj[0]
     Nj = NiNj[1]
-    cij = m.floor(Ni / 2)  # center
+    ci = m.floor(Ni / 2)
+    cj = m.floor(Nj / 2)
+    radius = min(ci, cj)
 
     # Fill the rotation operator matrix
     # rotationMatrix = np.zeros([Ni * Nj, Ni * Nj])
-    idx = [] # This will contain a list of index tuples
-    vals = [] # This will contain the corresponding weights
+    idx = []  # This will contain a list of index tuples
+    vals = []  # This will contain the corresponding weights
     for i in range(0, NiNj[0]):
-        for j in range(0, NiNj[0]):
+        for j in range(0, NiNj[1]):
             # Apply a circular mask (disk matrix) if desired
-            if not(diskMask) or ((i - cij) * (i - cij) + (j - cij) * (j - cij) <= (cij + 0.5) * (cij + 0.5)):
+            if (not diskMask) or ((i - ci) * (i - ci) + (j - cj) * (j - cj) <= (radius + 0.5) * (radius + 0.5)):
                 # The row index of the operator matrix
                 linij = ToLinearIndex([i, j], NiNj)
                 # The interpolation points
